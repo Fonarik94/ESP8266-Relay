@@ -1,0 +1,98 @@
+<html>
+<head>
+	<title>Settings</title>
+	<script src="/jquery-3.3.1.min.js"></script>
+	<style type="text/css" >
+	body{
+		display: flex; 
+		flex-flow: column wrap; 
+		justify-content: center;
+		align-items: center; 
+		font-size: 110%;
+		background-color: lightgray;
+	}
+	#params, #mqtt{
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		background-color: white;
+
+	}
+	#params{
+		box-shadow: 1px 5px 20px rgba(0,0,0,0.5);
+		padding: 15px;
+		border-radius: 10px;
+	}
+	form input{
+		padding: 5px;
+		margin: 5px;
+	}
+
+	@media handheld,only screen and (max-device-width:500px){
+		body{font-size: 250%}
+		form input{ 
+			width: 500px;
+			height: 80px;
+			font-size: 90%;
+			background-color: fafafa;
+		}
+	}
+</style>
+</head>
+<body>
+	<form id="params" name="settings" method="post" action="/save">
+		<label for="wifi_ssid">WIFI SSID</label>
+		<input type="text" name="wifi_ssid" id="wifi_ssid">
+		<label for="wifi_password">WIFI Password</label>
+		<input type="password" name="wifi_password" id="wifi_password">
+		<label for="wifi_host_name">WIFI Host name</label>
+		<input type="test" name="wifi_host_name" id="wifi_host_name">
+		<label for="use_mqtt">Use MQTT</label>
+		<input type="checkbox" name="mqtt_use" id="mqtt_use" onclick="useMqtt()">
+		<div id="mqtt" style="display: none;">
+			<label for="domoticz_idx">Domoticz IDX</label>
+			<input type="text" name="domoticz_idx" id="domoticz_idx">
+			<label for="mqtt_client_id">MQTT Client ID</label>
+			<input type="text" name="mqtt_client_id" id="mqtt_client_id">
+			<label for="mqtt_broker_ip">MQTT Broker IP</label>
+			<input type="text" name="mqtt_broker_ip" id="mqtt_broker_ip">
+			<label for="mqtt_broker_port">MQTT Broker port</label>
+			<input type="text" name="mqtt_broker_port" id="mqtt_broker_port">
+			<label for="mqtt_user">MQTT User</label>
+			<input type="text" name="mqtt_user" id="mqtt_user">
+			<label for="mqtt_pass">MQTT Password</label>
+			<input type="text" name="mqtt_pass" id="mqtt_pass">
+			<label for="mqtt_topic">MQTT topic</label>	
+			<input type="text" name="mqtt_topic" id="mqtt_topic">
+		</div>
+		<input type="button" name="reboot" id="reboot" value="Reboot" onclick="system('reboot');">
+		<input type="button" name="factory_reset" id="factory_reset" value="Factory Reset" onclick="system('factory_reset');">
+		<input type="submit" name="write" value="Save">
+
+	</form>
+	<script type="text/javascript">
+		$(document).ready(function(){getValues()});
+		function getValues(){
+			$.getJSON('/settings.json', function(json) {
+				$.each(json, function(key, value) {
+					if(key == "mqtt_use" && value == "on"){
+						$("#mqtt_use").prop("checked", true);
+						useMqtt();
+					}
+					$("#"+key).val(value)});
+			});
+		}
+		function useMqtt(){
+			if($('#mqtt_use').prop('checked')){
+				$("#mqtt").show();
+			}
+			else{
+				$("#mqtt").hide();
+			}
+		}
+		function system(value){
+			$.post('/system', {"system_action": value}, function(response){alert(response)})
+		}
+	</script>
+</body>
+</html>
