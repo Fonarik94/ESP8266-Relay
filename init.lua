@@ -1,14 +1,55 @@
 LED_pin = 0 --on board red led
+LED_indicator = 4 --indicator pin
 LED_status = 0 
 BUTTON_pin = 3 --on board flash button
 TIMER_blink = tmr.create();
 TIMER_connect = tmr.create();
 TIMER_status = tmr.create();
+TIMER_indicator = tmr.create();
 WIFI_tmr = tmr.create()
+gpio.write(LED_pin, gpio.HIGH)
 gpio.mode(LED_pin, gpio.OUTPUT)
+gpio.mode(LED_indicator, gpio.OUTPUT)
 gpio.mode(BUTTON_pin, gpio.INT)
 dofile("http.lua");
+dofile("wifi.lua");
+dofile('propParser.lua');
 
+function indicator(status)
+    print("indicator update " .. status)
+    
+    if(status == "wifi_connecting") then
+        pwm.setup(LED_indicator, 200, 0); 
+        duty = 1023
+        step = 20
+        dir = true
+        pwm.setduty(LED_indicator, duty);
+        TIMER_indicator:alarm(50, tmr.ALARM_AUTO, function()
+            if dir then
+                duty = duty - step
+                if duty <= 500 then dir = false end
+            else
+                duty = duty + step
+                if duty >= 1000 then dir = true end
+            end
+            pwm.setduty(LED_indicator, duty)
+        end)
+    elseif(status == "mqtt_connecting") then
+        TIMER_indicator:alarm(250, tmr.ALARM_AUTO, function()
+        if (gpio.read(LED_indicator)) == 0 then
+            gpio.write(LED_indicator, gpio.HIGH)
+        elseif(gpio.read(LED_indicator)== 1) then
+            gpio.write(LED_indicator, gpio.LOW)
+        end
+        end)
+
+    elseif(status == "ok") then
+       TIMER_indicator:stop()
+       pwm.setduty(LED_indicator, 1023)
+       pwm.stop(LED_indicator)
+       gpio.write(LED_indicator, gpio.HIGH)
+    end
+end
 
 function set_led(status)
     if status == 0 then
@@ -18,7 +59,9 @@ function set_led(status)
         gpio.write(LED_pin, gpio.LOW)
         LED_status = 1
     end
-    send_status()    
+    if(prop.mqtt_use == "on") then 
+        send_status()
+    end    
 end 
 
 function button_released(level)
@@ -38,64 +81,21 @@ function blink()
     end
 end
 
-function wifi_sta_config()
-    wifi.sta.sethostname('Relay-ESP8266')
-    wifi.setmode(wifi.STATION);
-    wifi.sta.config({ssid = "Fonarik", pwd = "Gerasimenko09", save = true});
-    wifi.sta.autoconnect(1);
-    WIFI_tmr:alarm(10*1000, tmr.ALARM_SINGLE, function() wifi_start_ap() end)
-    wifi.sta.connect();
-    
-end
-
-function wifi_connect()
-
-    if(wifi.sta.status()~=5) then
-      if (wifi.sta.status()==0) then 
-        print("Station iddle")
-      elseif (wifi.sta.status()==1) then 
-        print("Station connecting")
-      elseif (wifi.sta.status()==2) then
-        print("Station wrong password")
-      elseif (wifi.sta.status()==3) then
-        print("Station no AP found")
-      elseif (wifi.sta.status()==4) then
-        print("Station connect fail")
-      end
-      TIMER_connect:alarm(1000, tmr.ALARM_AUTO, wifi_connect) 
-      else
-            WIFI_tmr:stop()
-            print(wifi.sta.getip())
-           -- do_broker_connect()
-            gpio.write(LED_pin, gpio.HIGH)
-            TIMER_connect:stop()
-    end
-end
-
-function wifi_start_ap()  
-        wifi.setmode(wifi.STATIONAP, false)
-        wifi.ap.dhcp.config({start = "10.1.1.100"})
-        wifi.ap.dhcp.start()
-        wifi.ap.config({ssid="NODE SETUP", pwd="12345678"})
-        print("AP Started")
-        print(wifi.ap.getip())
-end
-
 function initial_setup() 
-    dofile('propParser.lua');
+indicator("wifi_connecting")
     if not parse_props() then
         wifi_start_ap()
         else
-            wifi_sta_config()
-            wifi_connect()
             if(prop.mqtt_use == "on") then               
                 dofile("mqtt.lua");
             end
+        wifi_sta_config()
+        wifi_connect()
     end
 end
 
 initial_setup()
-TIMER_blink:alarm(100, tmr.ALARM_AUTO, blink) -- start blinking
+--TIMER_blink:alarm(100, tmr.ALARM_AUTO, blink) -- start blinking
 
 gpio.trig(BUTTON_pin, "up", button_released);
 httpsrv();

@@ -43,6 +43,7 @@ function Res:redirect(url, status)
 	self:status(status)
 	self._redirectUrl = url
 	self:send(status)
+   return true
 end
 
 function Res:type(type)

@@ -33,10 +33,11 @@ httpServer:use('/', function(req, res)
     end)
     
     httpServer:use('/save', function(req, res)
-        res:redirect('/settings')
+        local result = res:redirect('/settings')
+        print(result)
         local body=string.gsub(req.source, ".+[\n+]", "")
+        
         parse_body(body)
-        --print(body)
         body = nil
             collectgarbage()
         end)
@@ -50,6 +51,8 @@ httpServer:use('/', function(req, res)
                 elseif(body == "system_action=factory_reset") then
                     res:send("Factory reset ok")
                     file.remove("config.prop")
+                    prop = nil
+                    initial_setup()
                 end
          end
          end)

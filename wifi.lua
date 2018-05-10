@@ -27,7 +27,6 @@ function wifi_connect()
         print("Station wrong password")
       elseif (wifi.sta.status()==3) then
         print("Station no AP found")
-        
       elseif (wifi.sta.status()==4) then
         print("Station connect fail")
       end
@@ -39,12 +38,13 @@ function wifi_connect()
             if(prop.mqtt_use == "on") then
                 do_broker_connect()
             end    
-            gpio.write(LED_pin, gpio.HIGH)
             TIMER_connect:stop()
+            indicator("ok")
     end
 end
 
 function wifi_start_ap()  
+
         wifi.setmode(wifi.STATIONAP, false)
         wifi.ap.setip({ip="10.1.1.1", netmask="255.255.255.0", gateway="10.1.1.1"})
         wifi.ap.dhcp.config({start = "10.1.1.10"})

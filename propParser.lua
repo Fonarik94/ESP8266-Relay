@@ -35,5 +35,5 @@ function parse_body(body)
     end
     cfg:close()
     cfg=nil
-    parse_props()
+    initial_setup()
 end
