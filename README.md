@@ -18,3 +18,4 @@ Fade in/out : wifi connecting, or wifi AP is launched;<br>
 Fast blinking : connecting to mqtt broker;<br>
 Off : connecting success;<br>
 
+As HTTP server used modified sources of <a href="https://github.com/wangzexi/NodeMCU-HTTP-Server">this<a> project 
