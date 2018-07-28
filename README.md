@@ -7,7 +7,7 @@ For launch this app in ESP8266 MCU you first need to flash <a href="https://node
 file,gpio,mqtt,net,node,pwm,tmr,uart,wifi. You need to <a href="https://nodemcu-build.com/">build</a> custom firmware.
 In <b>init.lua</b> file, in few first rows, need set up correct pins. You need to use ESPlorer for upload files into flash memory of ESP8266.
 Optional, after uploading lua files, you can compile it to *.lc, and change file names in <b>dofile</b> section from <b>*.lua</b> to <b>*.lc</b>.
-It can save about 10% of memory usage.
+It can save about 10% of memory usage.<br>
 <b>How to use</b><br>
 After launch, device will connect to wifi network and MQTT brocker. Led indicatror will blink smoothly while wifi connecting, and fast blink while MQTT connecting.<br>
 About indication:<br>
